@@ -35,10 +35,10 @@ public class Livro {
 
     public Livro(DadosLivros dados) {
         this.titulo = dados.titulo();
-        this.autores = dados.autores().stream()
-                .map(dadosAutor -> new Author(dadosAutor))
-                .collect(Collectors.toList());
         this.idiomas = dados.idiomas();
+        this.autores = dados.autores().stream()
+                .map(Author::new)
+                .collect(Collectors.toList()); // Inicializa apenas com os novos autores
     }
 
     public Long getId() {

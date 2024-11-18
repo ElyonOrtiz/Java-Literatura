@@ -26,16 +26,17 @@ public class Author {
     private List<Livro> livros = new ArrayList<>();
 
     // Default constructor
-    public Author() {}
-
     public Author(DadosAuthor dados) {
         this.name = dados.name();
         this.birthYear = dados.birthYear();
         this.deathYear = dados.deathYear();
     }
+    public Author() {}
     public void adicionarLivro(Livro livro) {
-        this.livros.add(livro);
-        livro.getAutores().add(this); // adiciona a referência inversa
+        if (!this.livros.contains(livro)) {
+            this.livros.add(livro);
+            livro.getAutores().add(this); // Adiciona referência inversa
+        } // adiciona a referência inversa
     }
 
     // Getters and Setters

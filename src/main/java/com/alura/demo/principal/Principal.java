@@ -1,8 +1,7 @@
 package com.alura.demo.principal;
 
-import com.alura.demo.Model.ApiResponse;
-import com.alura.demo.Model.DadosLivros;
-import com.alura.demo.Model.Livro;
+import com.alura.demo.Model.*;
+import com.alura.demo.repository.AuthorRepository;
 import com.alura.demo.repository.LivrosRepository;
 import com.alura.demo.service.ConsumoApi;
 import com.alura.demo.service.ConverteDados;
@@ -18,17 +17,20 @@ public class Principal {
     private Scanner leitor = new Scanner(System.in);
     private ConsumoApi consumoApi = new ConsumoApi();
     private ConverteDados converter = new ConverteDados();
-    private LivroService livroService = new LivroService();
-    private LivrosRepository livrosRepository;
+    private final LivroService livroService;
 
-    public Principal(LivrosRepository livrosRepository){
-        this.livrosRepository = livrosRepository;
+    @Autowired
+    public Principal(LivrosRepository livrosRepository, LivroService livroService){
+        this.livroService = livroService;
     }
     public void exibeMenu(){
         var opcao = -1;
         while (opcao != 0){
             var menu = """
                     1- Cadastrar Novo Livro
+                    2- Listar Livros Registrados
+                    3- Listar Auteores Registrados
+                    4- Buscar Livros por autor
                     0- Sair
                     """;
             System.out.println(menu);
@@ -38,6 +40,15 @@ public class Principal {
                 case 1:
                     cadastrarLivro();
                     break;
+                case 2:
+                    listarLivros();
+                    break;
+                case 3:
+                    listarAutores();
+                    break;
+                case 4:
+                    buscarLivrosPorAutor();
+                    break;
                 case 0:
                     System.out.println("Sessão encerrada");
                     break;
@@ -46,6 +57,7 @@ public class Principal {
             }
         }
     }
+
 
     private void cadastrarLivro() {
         ApiResponse dados = getDadosDoLivro();
@@ -57,34 +69,31 @@ public class Principal {
             return;
         }
 
-        var opcaoSalvarTodos = livros.size() + 1;
-        var opcaoCancelar = opcaoSalvarTodos + 1;
-
         while (!livros.isEmpty()) {
+            System.out.println("Escolha um livro para salvar ou uma das opções:");
+            System.out.println("1 - Salvar todos");
+            System.out.println("0 - Cancelar");
             System.out.println("Livros encontrados:");
             for (int i = 0; i < livros.size(); i++) {
                 var livro = livros.get(i);
-                System.out.printf("%d - %s - %s - Autor(es): %s\n", i + 1, livro.titulo(), livro.idiomas().toString(), livro.autores().toString());
+                System.out.printf("%d - %s - %s - Autor(es): %s\n",
+                        i + 2, livro.titulo(), livro.idiomas(), livro.autores());
             }
 
-            System.out.printf("%d - Salvar todos\n", opcaoSalvarTodos);
-            System.out.printf("%d - Cancelar\n", opcaoCancelar);
 
-            System.out.println("Escolha um livro para salvar ou uma das opções acima:");
             int opcao = leitor.nextInt();
 
-            if (opcao == opcaoSalvarTodos) {
-//                salvarLivros(livros);
+            if (opcao == 1) {
+                livros.forEach(dadosLivro -> {
+                    salvarLivro(dadosLivro);
+                });
                 break;
-            } else if (opcao == opcaoCancelar) {
+            } else if (opcao == 0) {
                 System.out.println("Operação cancelada.");
                 break;
             } else if (opcao > 0 && opcao <= livros.size()) {
                 var livroSelecionado = livros.get(opcao - 1);
-                Livro livro = new Livro(livroSelecionado);
-                System.out.println();
-
-                livrosRepository.save(livro);
+                salvarLivro(livroSelecionado);
                 livros.remove(opcao - 1);
             } else {
                 System.out.println("Opção inválida, tente novamente.");
@@ -93,15 +102,14 @@ public class Principal {
     }
 
 
-    private void salvarLivro(Livro livro) {
+
+    private void salvarLivro(DadosLivros livro) {
         livroService.salvarLivro(livro);
-        System.out.printf( livro.getTitulo());
     }
 
     private void salvarLivros(List<DadosLivros> livros) {
         for (var dados : livros) {
-            Livro livro = new Livro(dados);
-            livroService.salvarLivro(livro);
+            livroService.salvarLivro(dados);
         }
         System.out.println("Todos os livros foram salvos com sucesso!");
     }
@@ -116,4 +124,24 @@ public class Principal {
         System.out.println(response);
         return response;
     }
+    private void buscarLivrosPorAutor() {
+        System.out.println("Por qual autor deseja buscar livros?");
+        String autor = leitor.next();
+        try {
+            livroService.findByAutor(autor);
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    private void listarAutores() {
+
+        livroService.findAllAutor();
+    }
+
+    private void listarLivros() {
+        livroService.findAllLivros();
+    }
+
 }
